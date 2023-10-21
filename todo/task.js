@@ -5,38 +5,44 @@ let tasks;
 
 loadTasksFromLocalStorage();
 
-taskInput.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') {
-    event.preventDefault();
-    addTask();
-  }
-});
-
-taskAddButton.addEventListener('click', addTask);
+taskAddButton.addEventListener('click', (event) => {
+  event.preventDefault();
+  addTask();
+})
 
 tasksList.addEventListener('click', (event) => {
   if (event.target.classList.contains('task__remove')) {
     const task = event.target.closest('.task');
-    const taskId = task.dataset.id;
 
     task.remove();
-
-    delete tasks[taskId];
-    localStorage.setItem('tasks', JSON.stringify(tasks));
+    loadTasksToLocalStorage();
   }
 })
 
 function loadTasksFromLocalStorage() {
-  tasks = JSON.parse(localStorage.getItem('tasks')) || {};
+  tasks = JSON.parse(localStorage.getItem('tasks')) || [];
   
-  for (const taskId in tasks) {
-    addTaskToHTML(tasks[taskId], taskId);
+  if (tasks.length > 0) {
+    for (const taskTitle of tasks) {
+      addTaskToHTML(taskTitle);
+    }
   }
 }
 
-function addTaskToHTML(taskTitle, taskId) {
+function loadTasksToLocalStorage() {
+  const tasksTitleList = tasksList.querySelectorAll('.task__title');
+  tasks = [];
+
+  for (const taskTitle of tasksTitleList) {
+    tasks.push(taskTitle.innerText);
+  }
+
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+function addTaskToHTML(taskTitle) {
   const taskHTML = `
-    <div class="task" data-id="${taskId}">
+    <div class="task">
       <div class="task__title">
         ${taskTitle}
       </div>
@@ -50,16 +56,9 @@ function addTask() {
   const taskTitle = taskInput.value.trim();
 
   if (taskTitle) {
-    const lastTaskId = JSON.parse(localStorage.getItem('lastTaskId')) || 0;
-    const taskId = lastTaskId + 1;
-
-    taskInput.value = '';
-    addTaskToHTML(taskTitle, taskId);
-    
-    tasks[taskId] = taskTitle;
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-    localStorage.setItem('lastTaskId', taskId);
-  } else {
-    taskInput.value = '';
+    addTaskToHTML(taskTitle);
+    loadTasksToLocalStorage();
   }
+
+  taskInput.value = '';
 }
